@@ -1,0 +1,38 @@
+{
+  "_help": "Your own shop bundles. Edit this file, then restart the server or call POST /live/store/admin/reload (developer account). Set enabled to true to sell a bundle. currency: coin | amethyst | amulet. items: any shortCode from data/static/store/I_List.json, or coin / amethyst / amulet to pay out currency. limitPerUser: null = unlimited. shelf: direct_sale_store | recommend_store | amulet_store | amethys_store | lootbox_store | webinflu_store. startAt/endAt (ISO date) are optional.",
+  "bundles": [
+    {
+      "enabled": false,
+      "shortCode": "Bundle_RIN_Starter",
+      "title": "RIN Starter Pack",
+      "description": "Example bundle - 5 Luck Pot tickets and a character",
+      "items": [
+        { "shortCode": "Default_Gacha", "amount": 5 },
+        { "shortCode": "Survivor_Jean", "amount": 1 }
+      ],
+      "currency": "coin",
+      "price": 1000,
+      "limitPerUser": 1,
+      "shelf": "recommend_store",
+      "tags": ["bundle"],
+      "startAt": null,
+      "endAt": null,
+      "imageURL": ""
+    },
+    {
+      "enabled": false,
+      "shortCode": "Bundle_RIN_AmethystPack",
+      "title": "RIN Amethyst Pack",
+      "description": "Example bundle - buy 500 amethyst with coins",
+      "items": [{ "shortCode": "amethyst", "amount": 500 }],
+      "currency": "coin",
+      "price": 50000,
+      "limitPerUser": null,
+      "shelf": "direct_sale_store",
+      "tags": ["bundle"],
+      "startAt": null,
+      "endAt": null,
+      "imageURL": ""
+    }
+  ]
+}
