@@ -1,5 +1,6 @@
 'use strict';
 
+const config     = require('@config');
 const Player     = require('@models/player.model');
 const staticJson = require('@utils/static-json.util');
 
@@ -41,6 +42,9 @@ const DEFAULT_SKINS = Object.freeze({
 });
 
 const DEFAULT_CURRENCIES = Object.freeze({ coin: 20_000, amethyst: 20_000, amulet: 20_000 });
+
+// Shortcode of the GM profile picture. Must match the item name the game client knows.
+const GM_PROFILE_ID = process.env.GM_PROFILE_ID || 'Profile_GM';
 
 const NAME_COOLDOWN_MS = 12 * 60 * 60 * 1_000;
 
@@ -107,9 +111,62 @@ class PlayerDataService {
     return Date.now() - new Date(lastNameUpdate).getTime() >= NAME_COOLDOWN_MS;
   }
 
+  // Fill any keys missing from `stored` using `base`, keeping stored values (arrays kept as-is).
+  _mergeDefaults(stored, base) {
+    if (stored === undefined || stored === null) return structuredClone(base);
+    if (Array.isArray(stored) || typeof stored !== 'object') return stored;
+    if (!base || typeof base !== 'object' || Array.isArray(base)) return stored;
+    const out = { ...stored };
+    for (const [k, v] of Object.entries(base)) {
+      out[k] = k in out ? this._mergeDefaults(out[k], v) : structuredClone(v);
+    }
+    return out;
+  }
+
+  // Authen is the save-data entry point: make sure progression fields exist in the DB
+  // so they are stored per player instead of being re-read from static auth.json.
+  async _ensureProgressionSaved(player) {
+    const base = (await this._getBasePlayerData()).data.player;
+    let changed = false;
+    for (const field of ['playerStat', 'rankData', 'returnPlayerStatus']) {
+      if (player[field] === undefined || player[field] === null) {
+        player[field] = structuredClone(base[field]);
+        player.markModified(field);
+        changed = true;
+      }
+    }
+    if (changed) await player.save();
+    return player;
+  }
+
+  // Accounts listed in DEVELOPERS (comma-separated Steam IDs in .env) get the GM profile.
+  async _ensureDeveloperPerks(player) {
+    const developers = config.developers ?? [];
+    if (!developers.includes(player.steamId)) return player;
+
+    const inventory = player.inventory ?? (player.inventory = {});
+    inventory.profiles = Array.isArray(inventory.profiles) ? inventory.profiles : [];
+    inventory.devAccount = true;
+
+    if (!inventory.profiles.includes(GM_PROFILE_ID)) {
+      inventory.profiles.push(GM_PROFILE_ID);
+      // Equip it the first time it is granted; the player can change it afterwards.
+      player.profile.display   = GM_PROFILE_ID;
+      player.profile.updatedAt = new Date();
+      player.markModified('profile');
+    }
+    player.markModified('inventory');
+    await player.save();
+    return player;
+  }
+
   async getOrCreatePlayerData(steamId, steamName) {
     const existing = await Player.findOne({ steamId });
-    if (existing) return this._syncDisplayName(existing, steamName);
+    if (existing) {
+      await this._ensureProgressionSaved(existing);
+      await this._ensureDeveloperPerks(existing);
+      return this._syncDisplayName(existing, steamName);
+    }
 
     const template = await this._loadPlayerTemplate();
     const { characterSlot, inventory } = this._assignDefaultSkinsToSlots(
@@ -138,6 +195,8 @@ class PlayerDataService {
     });
 
     await player.save();
+    await this._ensureProgressionSaved(player);
+    await this._ensureDeveloperPerks(player);
     return player;
   }
 
@@ -204,7 +263,12 @@ class PlayerDataService {
   }
 
   _convertInventoryToLegacy(inventory) {
-    const result = { inventory: {} };
+    // Authen is the legacy save-data contract consumed by the game client.
+    // Preserve any already-legacy entries, then overlay the normalized DB arrays.
+    const legacyInventory = inventory?.inventory && typeof inventory.inventory === 'object' && !Array.isArray(inventory.inventory)
+      ? { ...inventory.inventory }
+      : {};
+    const result = { inventory: legacyInventory };
     if (!inventory) return result;
 
     const addItems = (arr, counts = null) => {
@@ -216,15 +280,23 @@ class PlayerDataService {
       });
     };
 
+    // These arrays are the persisted ownership source used by Authen.
+    // Include costumes explicitly: Greedy Pot rewards with type "cosmetic"
+    // are stored here and must be returned to the game after re-authentication.
     [
-      inventory.characters, inventory.skins,    inventory.perks,
-      inventory.profiles,   inventory.stickers,  inventory.heads,
-      inventory.backs,      inventory.costumes,  inventory.rituals,
+      inventory.characters, inventory.skins, inventory.perks,
+      inventory.profiles, inventory.stickers, inventory.heads,
+      inventory.backs, inventory.costumes, inventory.rituals,
       inventory.cosmeticconsume, inventory.bundles, inventory.poses,
       inventory.effects,
     ].forEach((arr) => addItems(arr));
 
     addItems(inventory.items, inventory.itemCounts);
+
+    // The client addresses the two pots by these legacy short codes. Keep the
+    // counters in Authen synchronized with the server-side fields used by gacha.
+    result.inventory.Default_Gacha = Number(inventory.lootBoxAmount ?? legacyInventory.Default_Gacha ?? 0);
+    result.inventory.Bullet_Gacha = Number(inventory.bulletAmount ?? legacyInventory.Bullet_Gacha ?? 0);
     return result;
   }
 
@@ -253,6 +325,9 @@ class PlayerDataService {
     p.playerRecordHunter   = player.playerRecordHunter    ?? p.playerRecordHunter;
     p.playerRecordSurvivor = player.playerRecordSurvivor  ?? p.playerRecordSurvivor;
     p.curseRelic           = player.curseRelic            ?? p.curseRelic;
+    p.playerStat           = this._mergeDefaults(player.playerStat,         p.playerStat);
+    p.rankData             = this._mergeDefaults(player.rankData,           p.rankData);
+    p.returnPlayerStatus   = this._mergeDefaults(player.returnPlayerStatus, p.returnPlayerStatus);
     p.auth[0].authAt       = new Date().toISOString();
     p.auth[0].extId        = player.steamId;
     p.isOnline             = true;
