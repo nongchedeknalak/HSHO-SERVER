@@ -7,8 +7,7 @@
       "title": "RIN Starter Pack",
       "description": "5 Luck Pot + 1 Survivor",
       "items": [
-        { "shortCode": "Default_Gacha", "amount": 5 },
-        { "shortCode": "Survivor_Jean", "amount": 1 }
+        { "shortCode": "Default_Gacha", "amount": 50 },
       ],
       "currency": "coin",
       "price": 1000,
