@@ -122,6 +122,8 @@ Base URL ในตัวอย่างคือ `http://127.0.0.1:3000` โด�
 | GET | `/live/lootboxgo/api/items?loot_box_short_code=Bullet_Gacha` | อ่านรายการ Bullet Pot |
 | POST | `/live/lootboxgo/api/open` | เปิด Pot (ต้องมี Session) |
 
+การเปิด Pot จะบันทึกการหักจำนวน Pot, รางวัลที่ได้รับ, เงินชดเชยของซ้ำ และ Greedy Pity ลง Player document ใน MongoDB แบบ atomic update; เมื่อเรียก `/authen` อีกครั้ง ระบบจะแปลงหมวด Inventory กลับเป็น `data.player.inventory.inventory` พร้อม `Default_Gacha` และ `Bullet_Gacha` เพื่อให้ Client โหลด Save Data ล่าสุด
+
 รหัสกล่องสุ่มใน API:
 
 - `Default_Gacha` = Greedy Pot
