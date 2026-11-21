@@ -1,5 +1,6 @@
 const authService = require('@services/auth.service');
 const playerDataService = require('@services/player-data.service');
+const saveDataService = require('@services/savedata.service');
 const { sendError } = require('@utils/response.util');
 
 class AuthController {
@@ -22,6 +23,8 @@ class AuthController {
       const steamId = verification.steamId;
       const steamName = await authService.getSteamPlayerName(steamId);
       const player = await playerDataService.getOrCreatePlayerData(steamId, steamName);
+      await saveDataService.ensureDefaults(player);
+
       const banCheck = playerDataService.checkBanStatus(player);
 
       if (banCheck.banned) {

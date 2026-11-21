@@ -58,6 +58,17 @@ const playerSchema = new mongoose.Schema(
     role: { type: String, default: 'survivor' },
     banStatus: { type: mongoose.Schema.Types.Mixed },
     playerRecord: { type: mongoose.Schema.Types.Mixed },
+    // SaveData fields previously dropped by Mongoose strict mode.
+    playerRecordHunter: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    playerRecordSurvivor: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    curseRelic: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    playerStat: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    rankData: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    returnPlayerStatus: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    firstPayReward: { type: Boolean, default: false },
+    isNewPlayer: { type: Boolean, default: false },
+    lastSavedAt: { type: Date, default: null },
+    purchaseCounts: { type: mongoose.Schema.Types.Mixed, default: {} },
     stickerSlot: { type: mongoose.Schema.Types.Mixed },
     inventory: { type: mongoose.Schema.Types.Mixed },
     immortalData: {
