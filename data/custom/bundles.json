@@ -77,5 +77,6 @@
       "tags": ["bundle", "gacha"],
       "imageURL": ""
     }
-  ]
+ },
+  "status": true
 }
