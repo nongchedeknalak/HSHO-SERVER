@@ -41,10 +41,8 @@ const DEFAULT_SKINS = {
 
 const DEFAULT_PLAYER_CURRENCIES = {
   coin: 250000,
-  // Store currencies: new and legacy accounts get a starter balance so the
-  // amethyst/amulet shelves are actually usable.
-  amethyst: 5000,
-  amulet: 5000,
+  amethyst: 0,
+  amulet: 0,
 };
 
 class PlayerDataService {
@@ -149,31 +147,11 @@ class PlayerDataService {
     return Math.max(0, Math.ceil(remainingMs / 1000));
   }
 
-  // One-time starter grant for accounts created before the store supported
-  // amethyst/amulet. Uses max() so a player who already earned more keeps it.
-  async ensureStoreCurrencies(player) {
-    if (player.storeStarterGranted) return player;
-
-    player.amethyst = Math.max(
-      Number(player.amethyst) || 0,
-      DEFAULT_PLAYER_CURRENCIES.amethyst
-    );
-    player.amulet = Math.max(
-      Number(player.amulet) || 0,
-      DEFAULT_PLAYER_CURRENCIES.amulet
-    );
-    player.storeStarterGranted = true;
-    await player.save();
-
-    return player;
-  }
-
   async getOrCreatePlayerData(steamId, steamName) {
     const existingPlayer = await Player.findOne({ steamId });
 
     if (existingPlayer) {
-      const synced = await this.syncPlayerDisplayName(existingPlayer, steamName);
-      return this.ensureStoreCurrencies(synced);
+      return this.syncPlayerDisplayName(existingPlayer, steamName);
     }
 
     const template = await this.loadPlayerTemplate();
@@ -200,7 +178,7 @@ class PlayerDataService {
     });
 
     await newPlayer.save();
-    return this.ensureStoreCurrencies(newPlayer);
+    return newPlayer;
   }
 
   async syncPlayerDisplayName(player, steamName) {

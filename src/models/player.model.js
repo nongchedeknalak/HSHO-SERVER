@@ -69,9 +69,6 @@ const playerSchema = new mongoose.Schema(
     isNewPlayer: { type: Boolean, default: false },
     lastSavedAt: { type: Date, default: null },
     purchaseCounts: { type: mongoose.Schema.Types.Mixed, default: {} },
-    // Store history + one-time amethyst/amulet starter grant.
-    purchaseLog: { type: [mongoose.Schema.Types.Mixed], default: [] },
-    storeStarterGranted: { type: Boolean, default: false },
     stickerSlot: { type: mongoose.Schema.Types.Mixed },
     inventory: { type: mongoose.Schema.Types.Mixed },
     immortalData: {

@@ -32,17 +32,4 @@ module.exports = {
   server: {
     version: '1.0.0',
   },
-
-  store: {
-    // priceTags[].currencyType -> field on the Player model.
-    // 3 and 5 are real-money products (Gem_Pack_*, Bundle_CPH_*), so they are not
-    // purchasable with in-game currency.
-    currencyMap: { 1: 'coin', 2: 'amethyst', 4: 'amulet' },
-    maxPurchaseQuantity: 99,
-    // The original server closed, so most limited-time listings have long expired.
-    // false = every active product stays listed and buyable.
-    enforceListingWindow: process.env.STORE_ENFORCE_WINDOW === 'true',
-    // Your own items for sale: data/custom/bundles.json
-    customBundlesFile: 'custom/bundles.json',
-  },
 };
