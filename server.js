@@ -49,7 +49,7 @@ app.use((req, res, next) => {
     return origJson(body);
   };
   res.on('finish', () => {
-    if (req.path === '/health') return;
+    if (req.path === '/health' || req.path === '/favicon.ico') return;
     console.log(`[req] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${Date.now() - started}ms)` +
       (errMsg ? ` error="${errMsg}"` : ''));
   });
@@ -99,6 +99,10 @@ app.post('/logapi/v1/check/serverdetect', (req, res) => {
         status: 1
     });
 });
+
+// Browsers and Render probes automatically request /favicon.ico. Answer 204 instead of
+// falling through to the JSON 404 handler, which would log a misleading error="Not found".
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // --- Existing Routes & System Handlers ---
 

@@ -17,4 +17,5 @@
 ## Render deploy fix
 - `server.js` now registers module aliases with absolute paths from `__dirname` instead of relying on `module-alias/register` + cwd. Fixes `Cannot find module '/opt/render/project/src/src/config/index'` when the Render Root Directory differs from the local working directory.
 - IMPORTANT: deploy the **full project** (`server.js`, `package.json`, `src/`, `data/`). The earlier "fixed files only" bundle intentionally omitted `src/config`, `src/utils` and `data` and must not be used as the deploy root.
+- `/favicon.ico` now returns 204 and is excluded from request logs. Browsers/Render request it automatically; previously it produced a harmless but noisy `404 error="Not found"`.
 
