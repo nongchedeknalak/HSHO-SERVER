@@ -1,24 +1,4 @@
-'use strict';
-
-const path = require('path');
-const moduleAlias = require('module-alias');
-
-// Register aliases from this file's directory. `module-alias/register` looks for the
-// nearest package.json based on the process working directory, which differs between
-// local runs and Render. Absolute paths make the deploy independent of the cwd.
-const ROOT = __dirname;
-moduleAlias.addAliases({
-  '@src':        path.join(ROOT, 'src'),
-  '@config':     path.join(ROOT, 'src', 'config'),
-  '@routes':     path.join(ROOT, 'src', 'routes'),
-  '@controllers': path.join(ROOT, 'src', 'controllers'),
-  '@services':   path.join(ROOT, 'src', 'services'),
-  '@models':     path.join(ROOT, 'src', 'models'),
-  '@utils':      path.join(ROOT, 'src', 'utils'),
-  '@middleware': path.join(ROOT, 'src', 'middleware'),
-  '@data':       path.join(ROOT, 'data'),
-});
-
+require('module-alias/register');
 require('dotenv').config();
 
 const express = require('express');
@@ -49,7 +29,7 @@ app.use((req, res, next) => {
     return origJson(body);
   };
   res.on('finish', () => {
-    if (req.path === '/health' || req.path === '/favicon.ico') return;
+    if (req.path === '/health') return;
     console.log(`[req] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${Date.now() - started}ms)` +
       (errMsg ? ` error="${errMsg}"` : ''));
   });
@@ -99,10 +79,6 @@ app.post('/logapi/v1/check/serverdetect', (req, res) => {
         status: 1
     });
 });
-
-// Browsers and Render probes automatically request /favicon.ico. Answer 204 instead of
-// falling through to the JSON 404 handler, which would log a misleading error="Not found".
-app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // --- Existing Routes & System Handlers ---
 
