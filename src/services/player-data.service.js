@@ -1,6 +1,5 @@
 const Player = require('@models/player.model');
 const staticJson = require('@utils/static-json.util');
-const saveDataService = require('@services/savedata.service');
 
 const DEFAULT_SKINS = {
   Hunter_Pray: 'Skin_Nymph_D_Default',
@@ -296,22 +295,12 @@ class PlayerDataService {
     response.data.player.amethyst = player.amethyst ?? DEFAULT_PLAYER_CURRENCIES.amethyst;
     response.data.player.amulet = player.amulet ?? DEFAULT_PLAYER_CURRENCIES.amulet;
     response.data.player.banStatus = player.banStatus || response.data.player.banStatus;
-    // Progression SaveData must come from this player's own persisted document.
-    // Previously /authen echoed the shared sample in auth.json, so every login
-    // silently reset level/exp/MMR/rank/records back to the template values.
-    const saveData = saveDataService.buildClientSaveData(player);
-    response.data.player.playerRecord = saveData.playerRecord;
-    response.data.player.playerRecordHunter = saveData.playerRecordHunter;
-    response.data.player.playerRecordSurvivor = saveData.playerRecordSurvivor;
-    response.data.player.playerStat = saveData.playerStat;
-    response.data.player.rankData = saveData.rankData;
-    response.data.player.returnPlayerStatus = saveData.returnPlayerStatus;
-    response.data.player.curseRelic = saveData.curseRelic;
-    response.data.player.firstPayReward = saveData.firstPayReward;
-    response.data.player.isNewPlayer = saveData.isNewPlayer;
-    response.data.player.lastSavedAt = player.lastSavedAt
-      ? new Date(player.lastSavedAt).toISOString()
-      : null;
+    response.data.player.playerRecord = player.playerRecord || response.data.player.playerRecord;
+    response.data.player.playerRecordHunter =
+      player.playerRecordHunter || response.data.player.playerRecordHunter;
+    response.data.player.playerRecordSurvivor =
+      player.playerRecordSurvivor || response.data.player.playerRecordSurvivor;
+    response.data.player.curseRelic = player.curseRelic || response.data.player.curseRelic;
     response.data.player.auth[0].authAt = new Date().toISOString();
     response.data.player.auth[0].extId = steamId;
     response.data.player.isOnline = true;

@@ -8,6 +8,7 @@ const inventoryRoutes = require('./inventory.routes');
 const immortalRoutes = require('./Immortal.routes');
 const gameRoutes = require('./game.routes');
 const gachaRoutes = require('./gacha.routes');
+const customShopRoutes = require('./custom-shop.routes');
 
 const router = express.Router();
 
@@ -22,6 +23,7 @@ router.use('/live', gameRoutes);
 router.use('/live', storeRoutes);
 router.use('/live', immortalRoutes);
 router.use('/live/lootboxgo', gachaRoutes);
+router.use('/live', customShopRoutes);
 
 router.use('/live/immortal/get', staticJson.serve('static/player/immortal.json'));
 router.use('/live/player/curserelic/get', staticJson.serve('static/player/curserelic.json'));

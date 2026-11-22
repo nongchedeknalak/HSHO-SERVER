@@ -353,7 +353,7 @@ class InventoryService {
     });
   }
 
-  async addItemToInventory(player, itemId, quantity = 1) {
+  async addItemToInventory(player, itemId, quantity = 1, options = {}) {
     const inventory = player.inventory;
     this.ensureInventoryArrays(inventory);
 
@@ -373,7 +373,9 @@ class InventoryService {
     }
 
     player.markModified('inventory');
-    await player.save();
+    if (options.save !== false) {
+      await player.save();
+    }
 
     return { success: true, itemId, quantity };
   }

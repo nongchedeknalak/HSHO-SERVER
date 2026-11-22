@@ -1,142 +1,91 @@
 const staticJson = require('@utils/static-json.util');
+const inventoryService = require('@services/inventory.service');
 
-const RARITY_WEIGHTS = {
-  1: 70, // Common
-  2: 20, // Uncommon
-  3: 7, // Rare
-  4: 2, // Epic
-  5: 1, // Legendary
+const RARITY_WEIGHTS = { 1: 65, 2: 22, 3: 9, 4: 3, 5: 1 };
+const LOOT_BOX_FILES = {
+  Default_Gacha: 'static/pots/greedy.json',
+  Bullet_Gacha: 'static/pots/bullet.json',
 };
 
-const selectRandomRarity = () => {
-  const totalWeight = Object.values(RARITY_WEIGHTS).reduce((sum, weight) => sum + weight, 0);
-  let random = Math.random() * totalWeight;
-
+function selectRarity() {
+  const total = Object.values(RARITY_WEIGHTS).reduce((sum, value) => sum + value, 0);
+  let roll = Math.random() * total;
   for (const [rarity, weight] of Object.entries(RARITY_WEIGHTS)) {
-    random -= weight;
-    if (random <= 0) {
-      return rarity;
-    }
+    roll -= weight;
+    if (roll < 0) return rarity;
   }
-
   return '1';
-};
+}
 
-const selectItemByRarity = (items, targetRarity) => {
-  const itemsWithRarity = items.filter((item) => item.rarity === targetRarity);
+function chooseItem(items, rarity) {
+  const pool = items.filter((item) => String(item.rarity) === String(rarity));
+  const selectedPool = pool.length ? pool : items;
+  return selectedPool[Math.floor(Math.random() * selectedPool.length)];
+}
 
-  if (itemsWithRarity.length === 0) {
-    return items[Math.floor(Math.random() * items.length)];
-  }
-
-  return itemsWithRarity[Math.floor(Math.random() * itemsWithRarity.length)];
-};
-
-const checkIfDuplicate = async (userId, itemShortCode) => {
-  return Math.random() > 0.5;
-};
 
 module.exports.OpenLootBox = async (req, res) => {
   try {
-    const { loot_box_short_code, amount } = req.body;
+    const player = req.player;
+    if (!player) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
 
-    if (!loot_box_short_code) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'loot_box_short_code is required',
-      });
+    const { loot_box_short_code, amount } = req.body || {};
+    if (!LOOT_BOX_FILES[loot_box_short_code]) {
+      return res.status(400).json({ status: 'error', message: 'Invalid loot box type' });
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > 100) {
+      return res.status(400).json({ status: 'error', message: 'amount must be an integer between 1 and 100' });
     }
 
-    if (!amount || amount < 1 || amount > 100) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'amount must be between 1 and 100',
-      });
+    // Only Default_Gacha uses the Greedy Pot counter. Bullet pot keeps its own counter.
+    const inventory = player.inventory || (player.inventory = {});
+    const counterKey = loot_box_short_code === 'Default_Gacha' ? 'lootBoxAmount' : 'bulletAmount';
+    const available = Number(inventory[counterKey] || 0);
+    if (available < amount) {
+      return res.status(400).json({ status: 'error', message: `Not enough pot charges (${available} available)` });
     }
 
-    const fileMap = {
-      'Default_Gacha': 'static/pots/greedy.json',
-      'Bullet_Gacha': 'static/pots/bullet.json'
-    };
-
-    const filePath = fileMap[loot_box_short_code];
-
-    if (!filePath) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid loot box type',
-      });
-    }
-
-    const bannerData = await staticJson.load(filePath);
-
+    const bannerData = await staticJson.load(LOOT_BOX_FILES[loot_box_short_code]);
     const items = bannerData.data?.items || bannerData.items || [];
+    if (!items.length) return res.status(500).json({ status: 'error', message: 'Pot has no items configured' });
 
-    if (!items || items.length === 0) {
-      return res.status(500).json({
-        status: 'error',
-        message: 'Banner has no items configured',
-      });
-    }
-
-    const lootdrops = [];
-
+    const drops = [];
     for (let i = 0; i < amount; i++) {
-      const selectedRarity = selectRandomRarity();
-
-      const selectedItem = selectItemByRarity(items, selectedRarity);
-
-      const isDuplicate = await checkIfDuplicate(req.user?.id || 'guest', selectedItem.short_code);
-
-      const lootDrop = {
-        short_code: selectedItem.short_code,
-        name: selectedItem.name,
-        type: selectedItem.type,
-        rarity: selectedItem.rarity,
-        amount: 1,
-        duplicate_exchange: selectedItem.duplicate_exchange || {
-          enable: true,
-          short_code: 'coin',
-          amount: parseInt(selectedItem.rarity) * 100,
-          type: 'currency',
-        },
+      const item = chooseItem(items, selectRarity());
+      const isDuplicate = inventoryService.playerOwnsItem(player, item.short_code);
+      const drop = {
+        short_code: item.short_code,
+        name: item.name || item.short_code,
+        type: item.type,
+        rarity: String(item.rarity || '1'),
+        amount: Number(item.amount || 1),
+        duplicate_exchange: item.duplicate_exchange || { enable: false, short_code: 'coin', amount: 0, type: 'currency' },
         is_dup: isDuplicate,
       };
 
-      lootdrops.push(lootDrop);
+      if (isDuplicate && drop.duplicate_exchange.enable) {
+        const exchangeAmount = Math.max(0, Number(drop.duplicate_exchange.amount || 0));
+        if (drop.duplicate_exchange.short_code === 'coin') player.coin = Number(player.coin || 0) + exchangeAmount;
+        drop.exchange_received = { currency: drop.duplicate_exchange.short_code, amount: exchangeAmount };
+      } else if (!isDuplicate) {
+        await inventoryService.addItemToInventory(player, item.short_code, drop.amount, { save: false });
+      }
+      drops.push(drop);
     }
 
-    // TODO: Save items to user inventory
+    inventory[counterKey] = available - amount;
+    player.markModified('inventory');
+    await player.save();
 
-    return res.status(200).json({
-      status: 'success',
-      data: {
-        loot_box_type_str: loot_box_short_code,
-        loot_box_amount: amount,
-        lootdrops: lootdrops,
-      },
-    });
+
+    return res.status(200).json({ status: 'success', data: {
+      loot_box_type_str: loot_box_short_code,
+      loot_box_amount: amount,
+      remaining: inventory[counterKey],
+      lootdrops: drops,
+    }});
   } catch (error) {
-    console.error('Error opening loot box:', error);
-
-    if (error.message.includes('Invalid loot box')) {
-      return res.status(400).json({
-        status: 'error',
-        message: error.message,
-      });
-    }
-
-    if (error.code === 'ENOENT') {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Loot box configuration not found',
-      });
-    }
-
-    return res.status(500).json({
-      status: 'error',
-      message: 'Failed to open loot box',
-      debug: error.message,
-    });
+    console.error('Error opening loot pot:', error);
+    return res.status(500).json({ status: 'error', message: 'Failed to open loot pot' });
   }
 };
