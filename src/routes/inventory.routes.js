@@ -31,11 +31,13 @@ router.post('/sticker/edit',
 
 router.post('/inventory/addItem',
   authController.verifySession,
+  authController.requireDeveloper,
   inventoryController.addItem
 );
 
 router.post('/inventory/removeItem',
   authController.verifySession,
+  authController.requireDeveloper,
   inventoryController.removeItem
 );
 

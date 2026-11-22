@@ -1,31 +1,38 @@
 const staticJson = require('@utils/static-json.util');
 const inventoryService = require('@services/inventory.service');
+const Player = require('@models/player.model');
+const { withPlayerLock } = require('@utils/player-lock.util');
 
-// Increased high-rarity roll chance for the Greedy Pot.
-const RARITY_WEIGHTS = { 1: 40, 2: 25, 3: 20, 4: 10, 5: 5 };
+// Roll weights per rarity (relative, they do not have to add up to 100).
+// Easier odds: rarity 4 + 5 together are 50% of all rolls.
+const RARITY_WEIGHTS = { 1: 10, 2: 15, 3: 25, 4: 30, 5: 20 };
 const LOOT_BOX_FILES = {
   Default_Gacha: 'static/pots/greedy.json',
   Bullet_Gacha: 'static/pots/bullet.json',
 };
 
-function selectRarity() {
-  const total = Object.values(RARITY_WEIGHTS).reduce((sum, value) => sum + value, 0);
+// Weighted pick among the rarities that actually exist in the pot, then a random item of that rarity.
+function chooseItem(items) {
+  const present = [...new Set(items.map((item) => String(item.rarity)))];
+  const weightOf = (rarity) => RARITY_WEIGHTS[rarity] ?? 1;
+  const total = present.reduce((sum, rarity) => sum + weightOf(rarity), 0);
+
   let roll = Math.random() * total;
-  for (const [rarity, weight] of Object.entries(RARITY_WEIGHTS)) {
-    roll -= weight;
-    if (roll < 0) return rarity;
+  let rarity = present[present.length - 1];
+  for (const candidate of present) {
+    roll -= weightOf(candidate);
+    if (roll < 0) {
+      rarity = candidate;
+      break;
+    }
   }
-  return '1';
-}
 
-function chooseItem(items, rarity) {
-  const pool = items.filter((item) => String(item.rarity) === String(rarity));
-  const selectedPool = pool.length ? pool : items;
-  return selectedPool[Math.floor(Math.random() * selectedPool.length)];
+  const pool = items.filter((item) => String(item.rarity) === rarity);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 
-module.exports.OpenLootBox = async (req, res) => {
+const openLootBox = async (req, res) => {
   try {
     const player = req.player;
     if (!player) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
@@ -48,7 +55,7 @@ module.exports.OpenLootBox = async (req, res) => {
 
     const bannerData = await staticJson.load(LOOT_BOX_FILES[loot_box_short_code]);
     const configuredItems = bannerData.data?.items || bannerData.items || [];
-    // Greedy Pot is cosmetics-only: character skins, no heads/backs/perks/items.
+    // Greedy Pot = every character skin that is not a default skin (data/static/pots/greedy.json).
     const items = loot_box_short_code === 'Default_Gacha'
       ? configuredItems.filter((item) => item.type === 'skin' && String(item.short_code || '').startsWith('Skin_'))
       : configuredItems;
@@ -56,10 +63,7 @@ module.exports.OpenLootBox = async (req, res) => {
 
     const drops = [];
     for (let i = 0; i < amount; i++) {
-      const rarity = selectRarity();
-      const item = loot_box_short_code === 'Default_Gacha'
-        ? items[Math.floor(Math.random() * items.length)]
-        : chooseItem(items, rarity);
+      const item = chooseItem(items);
       const isDuplicate = inventoryService.playerOwnsItem(player, item.short_code);
       const drop = {
         short_code: item.short_code,
@@ -90,10 +94,28 @@ module.exports.OpenLootBox = async (req, res) => {
       loot_box_type_str: loot_box_short_code,
       loot_box_amount: amount,
       remaining: inventory[counterKey],
+      // current balances, so the client can show coin / amethyst / amulet after every opening
+      currency: {
+        coin: Number(player.coin || 0),
+        amethyst: Number(player.amethyst || 0),
+        amulet: Number(player.amulet || 0),
+      },
       lootdrops: drops,
     }});
   } catch (error) {
     console.error('Error opening loot pot:', error);
     return res.status(500).json({ status: 'error', message: 'Failed to open loot pot' });
   }
+};
+
+// One opening at a time per player, on a freshly loaded document, so it cannot overwrite a purchase.
+module.exports.OpenLootBox = (req, res) => {
+  if (!req.player) {
+    return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+  }
+
+  return withPlayerLock(req.player.steamId, async () => {
+    req.player = (await Player.findOne({ steamId: req.player.steamId })) || req.player;
+    return openLootBox(req, res);
+  });
 };

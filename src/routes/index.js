@@ -36,4 +36,10 @@ router.get('/live/lootboxgo/api/items', (req, res) => {
   return staticJson.serve(file)(req, res);
 });
 
+// Log any /live request nobody handles, so you can see which endpoints the game client still needs.
+router.use('/live', (req, res) => {
+  console.warn(`Unhandled request: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ status: 0, data: null, error: 'Not found' });
+});
+
 module.exports = router;

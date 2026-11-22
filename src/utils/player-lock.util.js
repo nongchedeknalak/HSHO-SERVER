@@ -1,7 +1,5 @@
-'use strict';
-
-// Runs async tasks one at a time per key (usually a steamId), so two quick
-// requests (double-click on buy) cannot overwrite each other's balance/inventory.
+// Runs async tasks one at a time per key (usually a steamId), so two quick requests
+// (double-click on buy, opening gacha twice) cannot overwrite each other's inventory writes.
 const locks = new Map();
 
 async function withPlayerLock(key, task) {

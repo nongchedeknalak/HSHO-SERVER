@@ -196,8 +196,11 @@ class InventoryService {
       }
     }
 
+    // stickerSlot is a Mixed field: without markModified the change was never written to MongoDB.
+    player.stickerSlot = player.stickerSlot || {};
     player.stickerSlot.stickerpreset = stickerInfo.stickerpreset;
     player.stickerSlot.stickerSet = stickerInfo.stickerSet;
+    player.markModified('stickerSlot');
     await player.save();
 
     return {
@@ -353,8 +356,8 @@ class InventoryService {
     });
   }
 
-  async addItemToInventory(player, itemId, quantity = 1, options = {}) {
-    const inventory = player.inventory;
+  // Pure in-memory grant (no save). Returns the category the item landed in.
+  applyItemToInventory(inventory, itemId, quantity = 1) {
     this.ensureInventoryArrays(inventory);
 
     const category = this.resolveInventoryCategory(itemId);
@@ -372,12 +375,35 @@ class InventoryService {
       inventory[category].push(itemId);
     }
 
+    return category;
+  }
+
+  // True when the item is a one-off (non-stackable) item the player already has.
+  isUniqueItemOwned(player, itemId) {
+    const category = this.resolveInventoryCategory(itemId);
+
+    if (category === 'items') {
+      return false;
+    }
+
+    return Boolean(player.inventory?.[category]?.includes(itemId));
+  }
+
+  async addItemToInventory(player, itemId, quantity = 1, options = {}) {
+    const amount = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
+
+    if (!player.inventory) {
+      player.inventory = {};
+    }
+
+    this.applyItemToInventory(player.inventory, itemId, amount);
+
     player.markModified('inventory');
     if (options.save !== false) {
       await player.save();
     }
 
-    return { success: true, itemId, quantity };
+    return { success: true, itemId, quantity: amount };
   }
 
   async removeItemFromInventory(player, itemId) {

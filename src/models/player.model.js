@@ -64,6 +64,12 @@ const playerSchema = new mongoose.Schema(
       type: [immortalDataSchema],
       default: [],
     },
+
+    // ---- Store / skin lock ----
+    purchaseCounts: { type: mongoose.Schema.Types.Mixed, default: {} },
+    purchaseLog: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    skinLockApplied: { type: Boolean, default: false },
+
     isOnline: { type: Boolean, default: false },
     lastOnline: { type: Date, default: Date.now },
   },

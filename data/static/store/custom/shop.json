@@ -29,8 +29,59 @@
         "currency": "coin",
         "enabled": true,
         "items": [
-          { "itemId": "Item_Rattan_ThunderBlade", "quantity": 1 },
-          { "itemId": "Item_EnergyDrink_ThaiTea", "quantity": 3 }
+          {
+            "itemId": "Item_Rattan_ThunderBlade",
+            "quantity": 1
+          },
+          {
+            "itemId": "Item_EnergyDrink_ThaiTea",
+            "quantity": 3
+          }
+        ]
+      },
+      {
+        "id": "greedy_pot_x3_coin",
+        "name": "Greedy Pot x3",
+        "description": "หม้อละโมบ 3 ครั้ง จ่ายด้วย Coin",
+        "price": 4500,
+        "currency": "coin",
+        "enabled": true,
+        "shelf": "direct_sale_store",
+        "items": [
+          {
+            "itemId": "Default_Gacha",
+            "quantity": 3
+          }
+        ]
+      },
+      {
+        "id": "greedy_pot_x10_amethyst",
+        "name": "Greedy Pot x10",
+        "description": "หม้อละโมบ 10 ครั้ง จ่ายด้วย Amethyst",
+        "price": 1800,
+        "currency": "amethyst",
+        "enabled": true,
+        "shelf": "amethys_store",
+        "items": [
+          {
+            "itemId": "Default_Gacha",
+            "quantity": 10
+          }
+        ]
+      },
+      {
+        "id": "greedy_pot_x20_amulet",
+        "name": "Greedy Pot x20",
+        "description": "หม้อละโมบ 20 ครั้ง จ่ายด้วย Amulet",
+        "price": 300,
+        "currency": "amulet",
+        "enabled": true,
+        "shelf": "amulet_store",
+        "items": [
+          {
+            "itemId": "Default_Gacha",
+            "quantity": 20
+          }
         ]
       }
     ]

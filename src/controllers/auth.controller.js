@@ -1,3 +1,4 @@
+const config = require('@config');
 const authService = require('@services/auth.service');
 const playerDataService = require('@services/player-data.service');
 const { sendError } = require('@utils/response.util');
@@ -30,6 +31,14 @@ class AuthController {
 
       const sessionToken = authService.generateJWT(steamId);
       await playerDataService.updatePlayerSession(player, steamId, sessionToken);
+      await playerDataService.migrateSkinLock(player);
+
+      // Accounts listed in DEVELOPERS (comma separated SteamIDs in .env) are flagged as dev/GM accounts
+      if (config.developers.includes(steamId) && !player.inventory?.devAccount) {
+        player.inventory = { ...(player.inventory || {}), devAccount: true };
+        player.markModified('inventory');
+        await player.save();
+      }
 
       console.log(`Auth successful for ${steamName} (${steamId})`);
       return res.status(200).json(
@@ -39,6 +48,15 @@ class AuthController {
       console.error('Auth endpoint error:', error);
       return sendError(res, 500, 'Internal server error');
     }
+  }
+
+  // Use after verifySession: only accounts listed in DEVELOPERS (.env) may continue.
+  requireDeveloper(req, res, next) {
+    if (!req.player || !config.developers.includes(req.player.steamId)) {
+      return sendError(res, 403, 'Developer account required');
+    }
+
+    return next();
   }
 
   async verifySession(req, res, next) {

@@ -1,3 +1,4 @@
+const config = require('@config');
 const Player = require('@models/player.model');
 const staticJson = require('@utils/static-json.util');
 
@@ -115,6 +116,43 @@ class PlayerDataService {
     return { characterSlot, inventory };
   }
 
+  isDefaultSkin(skin) {
+    return typeof skin === 'string' && /_D_Default$/.test(skin);
+  }
+
+  // Keeps only the default skin of each character and puts those on the character slots.
+  lockSkins(inventory = {}, characterSlot = {}) {
+    inventory.skins = (Array.isArray(inventory.skins) ? inventory.skins : []).filter((skin) =>
+      this.isDefaultSkin(skin)
+    );
+
+    this.ensureDefaultSkinsInInventory(inventory);
+
+    for (const slotType of ['hunterSlot', 'survivorSlot']) {
+      for (const slot of characterSlot[slotType] || []) {
+        if (slot.cosmetic_cloth && !inventory.skins.includes(slot.cosmetic_cloth)) {
+          slot.cosmetic_cloth = DEFAULT_SKINS[slot.character] || 'None';
+        }
+      }
+    }
+
+    return { inventory, characterSlot };
+  }
+
+  // LOCK_SKINS_EXISTING=true: strip skins from an existing account once.
+  async migrateSkinLock(player) {
+    if (!config.player.lockExistingSkins || player.skinLockApplied) {
+      return false;
+    }
+
+    this.lockSkins(player.inventory || (player.inventory = {}), player.characterSlot || {});
+    player.skinLockApplied = true;
+    player.markModified('inventory');
+    player.markModified('characterSlot');
+    await player.save();
+    return true;
+  }
+
   ensureDefaultSkinsInInventory(inventory = {}) {
     inventory.skins = Array.isArray(inventory.skins) ? inventory.skins : [];
 
@@ -161,6 +199,10 @@ class PlayerDataService {
 
     this.ensureDefaultSkinsInInventory(inventory);
 
+    if (config.player.lockSkins) {
+      this.lockSkins(inventory, characterSlot);
+    }
+
     const newPlayer = new Player({
       steamId,
       ...template,
@@ -172,11 +214,24 @@ class PlayerDataService {
         lastNameUpdate: new Date(),
         updatedAt: new Date(),
       },
+      skinLockApplied: config.player.lockSkins,
       isOnline: true,
       lastOnline: new Date(),
     });
 
-    await newPlayer.save();
+    try {
+      await newPlayer.save();
+    } catch (error) {
+      // Two simultaneous first logins: the other request created the document first.
+      if (error?.code === 11000) {
+        const created = await Player.findOne({ steamId });
+        if (created) {
+          return created;
+        }
+      }
+      throw error;
+    }
+
     return newPlayer;
   }
 
