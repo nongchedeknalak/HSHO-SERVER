@@ -1,7 +1,8 @@
 const staticJson = require('@utils/static-json.util');
 const inventoryService = require('@services/inventory.service');
 
-const RARITY_WEIGHTS = { 1: 65, 2: 22, 3: 9, 4: 3, 5: 1 };
+// Increased high-rarity roll chance for the Greedy Pot.
+const RARITY_WEIGHTS = { 1: 40, 2: 25, 3: 20, 4: 10, 5: 5 };
 const LOOT_BOX_FILES = {
   Default_Gacha: 'static/pots/greedy.json',
   Bullet_Gacha: 'static/pots/bullet.json',
@@ -46,12 +47,19 @@ module.exports.OpenLootBox = async (req, res) => {
     }
 
     const bannerData = await staticJson.load(LOOT_BOX_FILES[loot_box_short_code]);
-    const items = bannerData.data?.items || bannerData.items || [];
-    if (!items.length) return res.status(500).json({ status: 'error', message: 'Pot has no items configured' });
+    const configuredItems = bannerData.data?.items || bannerData.items || [];
+    // Greedy Pot is cosmetics-only: character skins, no heads/backs/perks/items.
+    const items = loot_box_short_code === 'Default_Gacha'
+      ? configuredItems.filter((item) => item.type === 'skin' && String(item.short_code || '').startsWith('Skin_'))
+      : configuredItems;
+    if (!items.length) return res.status(500).json({ status: 'error', message: 'Pot has no eligible items configured' });
 
     const drops = [];
     for (let i = 0; i < amount; i++) {
-      const item = chooseItem(items, selectRarity());
+      const rarity = selectRarity();
+      const item = loot_box_short_code === 'Default_Gacha'
+        ? items[Math.floor(Math.random() * items.length)]
+        : chooseItem(items, rarity);
       const isDuplicate = inventoryService.playerOwnsItem(player, item.short_code);
       const drop = {
         short_code: item.short_code,
