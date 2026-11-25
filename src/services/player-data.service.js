@@ -1,6 +1,7 @@
 const config = require('@config');
 const Player = require('@models/player.model');
 const staticJson = require('@utils/static-json.util');
+const saveDataService = require('@services/savedata.service');
 
 const DEFAULT_SKINS = {
   Hunter_Pray: 'Skin_Nymph_D_Default',
@@ -60,8 +61,10 @@ class PlayerDataService {
   }
 
   async loadPlayerTemplate() {
-    const template = await staticJson.load('static/player/PlayerTemplate.json');
-    return this.parseDates(template);
+    const template = this.parseDates(await staticJson.load('static/player/PlayerTemplate.json'));
+    // The template file only carries a token wallet; new accounts get the wallet from .env (STARTER_*)
+    Object.assign(template, config.player.starterCurrency);
+    return template;
   }
 
   parseDates(value) {
@@ -146,12 +149,59 @@ class PlayerDataService {
       return false;
     }
 
-    player.inventory = player.inventory || {};
-    player.inventory.bulletAmount = 0;
-    player.bulletPotZeroed = true;
-    player.markModified('inventory');
-    await player.save();
+    // Field-level update: never rewrites the whole inventory from a possibly stale copy.
+    await Player.updateOne(
+      { _id: player._id, bulletPotZeroed: { $ne: true } },
+      { $set: { 'inventory.bulletAmount': 0, bulletPotZeroed: true } }
+    );
+    player.set('bulletPotZeroed', true);
+    if (player.inventory) {
+      player.inventory.bulletAmount = 0;
+    }
     return true;
+  }
+
+  // Skins that were won/bought are also written to potSkins. If anything ever removed one from
+  // inventory.skins (old save, stale write), it is put back here. Field-level write.
+  async healOwnedSkins(steamId) {
+    const player = await Player.findOne({ steamId }).select('potSkins inventory.skins');
+    if (!player) {
+      return [];
+    }
+
+    const owned = new Set(Array.isArray(player.inventory?.skins) ? player.inventory.skins : []);
+    const missing = (player.potSkins || []).filter((skin) => !owned.has(skin));
+
+    if (missing.length > 0) {
+      await Player.updateOne(
+        { steamId },
+        { $addToSet: { 'inventory.skins': { $each: missing } } }
+      );
+      console.log(`Restored ${missing.length} missing skin(s) for ${steamId}`);
+    }
+
+    return missing;
+  }
+
+  // GRANT_STARTER_TO_EXISTING=true: once per account, add the STARTER_* wallet. New accounts already have it.
+  async grantStarterWalletOnce(steamId) {
+    if (!config.player.grantStarterToExisting) return false;
+    const wallet = config.player.starterCurrency;
+    const done = await Player.findOneAndUpdate(
+      { steamId, starterWalletGranted: { $ne: true } },
+      { $inc: { coin: 0, amethyst: wallet.amethyst, amulet: wallet.amulet }, $set: { starterWalletGranted: true } }
+    );
+    return Boolean(done);
+  }
+
+  // DEVELOPERS accounts: raise the wallet to the DEV_MIN_* values (never lowers it).
+  async topUpDeveloperWallet(steamId) {
+    const minimum = config.player.devMinCurrency || {};
+    for (const field of ['coin', 'amethyst', 'amulet']) {
+      if (minimum[field] > 0) {
+        await Player.updateOne({ steamId, [field]: { $lt: minimum[field] } }, { $set: { [field]: minimum[field] } });
+      }
+    }
   }
 
   async migrateSkinLock(player) {
@@ -230,6 +280,7 @@ class PlayerDataService {
         updatedAt: new Date(),
       },
       skinLockApplied: config.player.lockSkins,
+      starterWalletGranted: true,
       bulletPotZeroed: true,
       isOnline: true,
       lastOnline: new Date(),
@@ -372,6 +423,8 @@ class PlayerDataService {
     response.data.player.playerRecordSurvivor =
       player.playerRecordSurvivor || response.data.player.playerRecordSurvivor;
     response.data.player.curseRelic = player.curseRelic || response.data.player.curseRelic;
+    // Stats, rank, relics, flags: this player's own saved values (not the sample account)
+    Object.assign(response.data.player, saveDataService.buildClientSaveData(player));
     response.data.player.auth[0].authAt = new Date().toISOString();
     response.data.player.auth[0].extId = steamId;
     response.data.player.isOnline = true;

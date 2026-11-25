@@ -26,6 +26,7 @@ const DEFAULT_SHELF_BY_CURRENCY = {
 };
 // Pot tickets are not inventory items in this server: buying them raises the pot counters
 const COUNTER_ITEM_FIELDS = { Default_Gacha: 'lootBoxAmount', Bullet_Gacha: 'bulletAmount' };
+const CURRENCY_LABEL = { coin: 'Bullet Coins', amethyst: 'Amethyst', amulet: 'Amulet' };
 const SHORT_CODE_PATTERN = /^[A-Za-z0-9_]{1,80}$/;
 
 class StoreError extends Error {
@@ -588,7 +589,8 @@ class StoreService {
         throw new StoreError(404, 'Player not found');
       }
       if ((latest[currency] || 0) < totalPrice) {
-        throw new StoreError(400, `Not enough ${currency}`);
+        // Wording of the game client. currencyType 1 is shown as "Bullet Coins" in the game.
+        throw new StoreError(400, `Not enough ${CURRENCY_LABEL[currency] || currency}!`);
       }
       throw new StoreError(409, 'Purchase limit reached for this product');
     }
@@ -621,6 +623,12 @@ class StoreService {
       }
 
       fresh.markModified('inventory');
+      const boughtSkins = bundleItems
+        .map((entry) => String(entry.shortCode))
+        .filter((code) => inventoryService.resolveInventoryCategory(code) === 'skins');
+      if (boughtSkins.length) {
+        fresh.potSkins = [...new Set([...(fresh.potSkins || []), ...boughtSkins])];
+      }
       await fresh.save();
     } catch (error) {
       console.error('Purchase item grant failed, refunding:', error);

@@ -1,6 +1,8 @@
 const config = require('@config');
+const Player = require('@models/player.model');
 const authService = require('@services/auth.service');
 const playerDataService = require('@services/player-data.service');
+const saveDataService = require('@services/savedata.service');
 const { sendError } = require('@utils/response.util');
 
 class AuthController {
@@ -33,13 +35,19 @@ class AuthController {
       await playerDataService.updatePlayerSession(player, steamId, sessionToken);
       await playerDataService.migrateSkinLock(player);
       await playerDataService.migrateBulletPotZero(player);
+      await saveDataService.ensureDefaults(player);
 
       // Accounts listed in DEVELOPERS (comma separated SteamIDs in .env) are flagged as dev/GM accounts
       if (config.developers.includes(steamId) && !player.inventory?.devAccount) {
-        player.inventory = { ...(player.inventory || {}), devAccount: true };
-        player.markModified('inventory');
-        await player.save();
+        await Player.updateOne({ steamId }, { $set: { 'inventory.devAccount': true } });
       }
+
+      await playerDataService.grantStarterWalletOnce(steamId);
+      if (config.developers.includes(steamId)) {
+        await playerDataService.topUpDeveloperWallet(steamId);
+      }
+      // Put back any won skin that is missing from the inventory (runs after every other login write)
+      await playerDataService.healOwnedSkins(steamId);
 
       console.log(`Auth successful for ${steamName} (${steamId})`);
       return res.status(200).json(

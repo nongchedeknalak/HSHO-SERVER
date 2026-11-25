@@ -6,9 +6,13 @@ const { sendError } = require('@utils/response.util');
 const MAX_SAVE_BYTES = 256 * 1024;
 const safeSaveKeys = new Set(['settings', 'progress', 'gameOptions', 'lastLocation', 'tutorial', 'customData']);
 
+const saveDataService = require('@services/savedata.service');
+
 exports.get = async (req, res) => {
-  const player = await Player.findOne({ steamId: req.player.steamId }).select('gameSaveData updatedAt');
-  return res.status(200).json({ status: 1, data: { steamId: req.player.steamId, savedata: player?.gameSaveData || {}, updatedAt: player?.updatedAt || null } });
+  try {
+    const player = await Player.findOne({ steamId: req.player.steamId });
+    return res.status(200).json({ status: 1, data: { steamId: req.player.steamId, ...saveDataService.getSaveData(player), savedata: player?.gameSaveData || {}, updatedAt: player?.updatedAt || null } });
+  } catch (error) { console.error('Savedata get error:', error); return sendError(res, 500, 'Could not load player data'); }
 };
 
 exports.save = async (req, res) => {
@@ -16,13 +20,27 @@ exports.save = async (req, res) => {
     const payload = req.body?.savedata ?? req.body?.data ?? req.body;
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return sendError(res, 400, 'savedata must be an object');
     if (Buffer.byteLength(JSON.stringify(payload), 'utf8') > MAX_SAVE_BYTES) return sendError(res, 413, 'savedata is too large (max 256 KB)');
+
+    // Match results / stats / rank (playerStat, playerRecord, rankData, ...): merged into the player's document.
+    // Currency, inventory and skins are never taken from the client.
+    const hasProgress = saveDataService.CLIENT_WRITABLE_FIELDS.some((field) => payload[field] !== undefined);
+    let progress = null;
+    if (hasProgress) {
+      const fresh = await Player.findOne({ steamId: req.player.steamId });
+      progress = await saveDataService.applySaveData(fresh, payload);
+    }
+
     const patch = {};
     for (const [key, value] of Object.entries(payload)) {
       if (safeSaveKeys.has(key)) patch[`gameSaveData.${key}`] = value;
     }
-    if (!Object.keys(patch).length) return sendError(res, 400, 'No supported savedata fields. Allowed: ' + [...safeSaveKeys].join(', '));
-    const player = await Player.findOneAndUpdate({ steamId: req.player.steamId }, { $set: { ...patch, lastOnline: new Date(), isOnline: true } }, { new: true }).select('gameSaveData updatedAt');
-    return res.status(200).json({ status: 1, data: { savedata: player.gameSaveData, updatedAt: player.updatedAt } });
+    let game = null;
+    if (Object.keys(patch).length) {
+      const player = await Player.findOneAndUpdate({ steamId: req.player.steamId }, { $set: { ...patch, lastOnline: new Date(), isOnline: true } }, { new: true }).select('gameSaveData updatedAt');
+      game = player.gameSaveData;
+    }
+    if (!progress && !game) return sendError(res, 400, 'No supported savedata fields. Allowed: ' + [...saveDataService.CLIENT_WRITABLE_FIELDS, ...safeSaveKeys].join(', '));
+    return res.status(200).json({ status: 1, data: { ...(progress || {}), savedata: game, updatedAt: new Date().toISOString() } });
   } catch (error) { console.error('Savedata save error:', error); return sendError(res, 500, 'Could not save player data'); }
 };
 

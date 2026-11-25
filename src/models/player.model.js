@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const config = require('@config');
 
 const authSchema = new mongoose.Schema(
   {
@@ -70,6 +71,20 @@ const playerSchema = new mongoose.Schema(
     purchaseLog: { type: [mongoose.Schema.Types.Mixed], default: [] },
     skinLockApplied: { type: Boolean, default: false },
     bulletPotZeroed: { type: Boolean, default: false },
+    // Every skin ever won in a pot / bought. Used at login to put back skins that went missing.
+    starterWalletGranted: { type: Boolean, default: false },
+    potSkins: { type: [String], default: [] },
+
+    // ---- SaveData (match results, stats, rank). Without these fields Mongoose drops them.
+    playerStat: { type: mongoose.Schema.Types.Mixed },
+    rankData: { type: mongoose.Schema.Types.Mixed },
+    returnPlayerStatus: { type: mongoose.Schema.Types.Mixed },
+    playerRecordHunter: { type: mongoose.Schema.Types.Mixed },
+    playerRecordSurvivor: { type: mongoose.Schema.Types.Mixed },
+    curseRelic: { type: mongoose.Schema.Types.Mixed },
+    firstPayReward: { type: Boolean, default: false },
+    isNewPlayer: { type: Boolean, default: false },
+    lastSavedAt: { type: Date, default: null },
 
     // Persistent client-side settings/progress that are not part of authoritative wallet/inventory.
     gameSaveData: { type: mongoose.Schema.Types.Mixed, default: {} },
@@ -79,6 +94,7 @@ const playerSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    collection: config.mongo.collection,
   }
 );
 

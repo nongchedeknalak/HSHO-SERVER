@@ -10,6 +10,8 @@ module.exports = {
   mongo: {
     uri: process.env.MONGO_URI,
     dbName: process.env.MONGO_DB_NAME,
+    // Mongo collection that holds the players. Set MONGO_COLLECTION to use another one.
+    collection: process.env.MONGO_COLLECTION || 'nongche-api-data',
   },
 
   jwt: {
@@ -40,6 +42,21 @@ module.exports = {
     // LOCK_SKINS_EXISTING=true: one time per account, strip skins an existing account already has
     // (default skins stay). Accounts created while lockSkins is on are never touched.
     lockExistingSkins: process.env.LOCK_SKINS_EXISTING === 'true',
+    // Wallet of a brand new account (the template file has 5000 coin / 0 amethyst / 0 amulet).
+    starterCurrency: {
+      coin: Number(process.env.STARTER_COIN ?? 250000),
+      amethyst: Number(process.env.STARTER_AMETHYST ?? 5000),
+      amulet: Number(process.env.STARTER_AMULET ?? 500),
+    },
+    // true = one time per account, ADD the starter wallet to accounts that already exist
+    // (this is how existing players that show 0 amethyst / amulet get some).
+    grantStarterToExisting: process.env.GRANT_STARTER_TO_EXISTING === 'true',
+    // DEVELOPERS accounts are topped up to at least this much at every login (0 = off).
+    devMinCurrency: {
+      coin: Number(process.env.DEV_MIN_COIN ?? 0),
+      amethyst: Number(process.env.DEV_MIN_AMETHYST ?? 0),
+      amulet: Number(process.env.DEV_MIN_AMULET ?? 0),
+    },
   },
 
   store: {

@@ -21,4 +21,11 @@ router.post(
   storeController.reload
 );
 
+router.post(
+  '/store/admin/grant',
+  authController.verifySession,
+  authController.requireDeveloper,
+  storeController.grant
+);
+
 module.exports = router;

@@ -61,10 +61,18 @@ const openLootBox = async (req, res) => {
       : configuredItems;
     if (!items.length) return res.status(500).json({ status: 'error', message: 'Pot has no eligible items configured' });
 
+    // Roll in memory first, then write ONE field-level update (counter, coin, skins). The filter only
+    // matches while the pot counter still holds enough charges, so a stale copy can never overwrite
+    // the rest of the inventory and a double request cannot spend the same charges twice.
     const drops = [];
+    let coinGain = 0;
+    const granted = new Map();      // category -> short codes to add
+    const itemCounts = new Map();   // stackable item -> amount
+    const ownedNow = (code) => inventoryService.playerOwnsItem(player, code) || [...granted.values()].some((list) => list.includes(code));
+
     for (let i = 0; i < amount; i++) {
       const item = chooseItem(items);
-      const isDuplicate = inventoryService.playerOwnsItem(player, item.short_code);
+      const isDuplicate = ownedNow(item.short_code);
       const drop = {
         short_code: item.short_code,
         name: item.name || item.short_code,
@@ -77,18 +85,48 @@ const openLootBox = async (req, res) => {
 
       if (isDuplicate && drop.duplicate_exchange.enable) {
         const exchangeAmount = Math.max(0, Number(drop.duplicate_exchange.amount || 0));
-        if (drop.duplicate_exchange.short_code === 'coin') player.coin = Number(player.coin || 0) + exchangeAmount;
+        if (drop.duplicate_exchange.short_code === 'coin') coinGain += exchangeAmount;
         drop.exchange_received = { currency: drop.duplicate_exchange.short_code, amount: exchangeAmount };
       } else if (!isDuplicate) {
-        await inventoryService.addItemToInventory(player, item.short_code, drop.amount, { save: false });
+        const category = inventoryService.resolveInventoryCategory(item.short_code);
+        if (category === 'items') {
+          itemCounts.set(item.short_code, (itemCounts.get(item.short_code) || 0) + drop.amount);
+        } else {
+          if (!granted.has(category)) granted.set(category, []);
+          granted.get(category).push(item.short_code);
+        }
       }
       drops.push(drop);
     }
 
-    inventory[counterKey] = available - amount;
-    player.markModified('inventory');
-    await player.save();
+    const update = { $inc: { [`inventory.${counterKey}`]: -amount } };
+    if (coinGain > 0) update.$inc.coin = coinGain;
+    const addToSet = {};
+    for (const [category, codes] of granted) addToSet[`inventory.${category}`] = { $each: codes };
+    const wonSkins = granted.get('skins') || [];
+    if (wonSkins.length) addToSet.potSkins = { $each: wonSkins };
+    if (Object.keys(addToSet).length) update.$addToSet = addToSet;
 
+    const saved = await Player.findOneAndUpdate(
+      { steamId: player.steamId, [`inventory.${counterKey}`]: { $gte: amount } },
+      update,
+      { new: true }
+    );
+    if (!saved) {
+      return res.status(409).json({ status: 'error', message: 'Not enough pot charges' });
+    }
+
+    // Stackable items (rare for pots) go through the regular helper on the fresh document.
+    if (itemCounts.size) {
+      for (const [code, qty] of itemCounts) {
+        await inventoryService.addItemToInventory(saved, code, qty, { save: false });
+      }
+      saved.markModified('inventory');
+      await saved.save();
+    }
+    player.inventory = saved.inventory;
+    player.coin = saved.coin;
+    inventory[counterKey] = saved.inventory[counterKey];
 
     return res.status(200).json({ status: 'success', data: {
       loot_box_type_str: loot_box_short_code,

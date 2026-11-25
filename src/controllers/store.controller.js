@@ -54,3 +54,30 @@ exports.reload = async (req, res) => {
     return sendError(res, 500, 'Failed to reload store');
   }
 };
+
+// Developer accounts only: add (or remove, with a negative number) coin / amethyst / amulet.
+// Body: { "coin": 100000, "amethyst": 500, "amulet": 50, "steamId": "optional, default = yourself" }
+exports.grant = async (req, res) => {
+  try {
+    const Player = require('@models/player.model');
+    const inc = {};
+    for (const field of ['coin', 'amethyst', 'amulet']) {
+      const value = req.body?.[field];
+      if (value === undefined) continue;
+      if (!Number.isInteger(value) || Math.abs(value) > 1e9) {
+        return sendError(res, 400, `${field} must be an integer`);
+      }
+      inc[field] = value;
+    }
+    if (Object.keys(inc).length === 0) {
+      return sendError(res, 400, 'Send at least one of coin, amethyst, amulet');
+    }
+    const target = String(req.body?.steamId || req.player.steamId);
+    const updated = await Player.findOneAndUpdate({ steamId: target }, { $inc: inc }, { new: true });
+    if (!updated) return sendError(res, 404, 'Player not found');
+    return res.status(200).json({ status: 200, data: { steamId: target, coin: updated.coin, amethyst: updated.amethyst, amulet: updated.amulet } });
+  } catch (error) {
+    console.error('grant error:', error);
+    return sendError(res, 500, 'Could not grant currency');
+  }
+};
