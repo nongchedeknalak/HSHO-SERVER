@@ -46,7 +46,7 @@ const INVENTORY_DEFAULTS = {
   poses: [],
   effects: [],
   lootBoxAmount: 50,
-  bulletAmount: 50,
+  bulletAmount: 0,
 };
 
 const ITEM_CATEGORY_RULES = [

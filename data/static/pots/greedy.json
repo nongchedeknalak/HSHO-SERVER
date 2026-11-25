@@ -2615,19 +2615,6 @@
         }
       },
       {
-        "short_code": "Skin_Jessi_Shining",
-        "name": "Shining Pink",
-        "type": "skin",
-        "rarity": "4",
-        "amount": 1,
-        "duplicate_exchange": {
-          "enable": true,
-          "short_code": "coin",
-          "amount": 3500,
-          "type": "currency"
-        }
-      },
-      {
         "short_code": "Skin_Jessi_Swimsuit",
         "name": "Fuchsia Fireworks",
         "type": "skin",
@@ -11158,6 +11145,474 @@
       {
         "short_code": "Skin_ZbingZ_Student",
         "name": "Tweedy Schoolgirl",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Nylcan_D_Default",
+        "name": "Nylcan D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Don_D_Default",
+        "name": "Don D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Aof_D_Default",
+        "name": "Aof D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Nymph_D_Default",
+        "name": "Nymph D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Tim_D_Default",
+        "name": "Tim D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_PreOrder",
+        "name": "PreOrder",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_TouristJap_D_Default",
+        "name": "TouristJap D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Prisoner_D_Default",
+        "name": "Prisoner D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Manop_D_Default",
+        "name": "Manop D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Pang3P_D_Default",
+        "name": "Pang3P D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Jane_D_Default",
+        "name": "Jane D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Belle_D_Default",
+        "name": "Belle D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Vanz_D_Default",
+        "name": "Vanz D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_SeGuard_D_Default",
+        "name": "SeGuard D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_zBing_D_Default",
+        "name": "zBing D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Garnet_D_Default",
+        "name": "Garnet D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_GrannyKham_D_Default",
+        "name": "GrannyKham D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Chan_D_Default",
+        "name": "Chan D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Rigger_D_Default",
+        "name": "Rigger D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Student_D_Default",
+        "name": "Student D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Jessi_D_Default",
+        "name": "Jessi D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Aisha_D_Default",
+        "name": "Aisha D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Tida_D_Default",
+        "name": "Tida D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Saming_D_Default",
+        "name": "Saming D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Zico_D_Default",
+        "name": "Zico D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Ratri_D_Default",
+        "name": "Ratri D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_TimAwake_D_Default",
+        "name": "TimAwake D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Kamiko_D_Default",
+        "name": "Kamiko D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Verona_D_Default",
+        "name": "Verona D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_TouristJap_ElephantPants_NEEDTODELETE",
+        "name": "TouristJap ElephantPants NEEDTODELETE",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_GrimFamily_D_Default",
+        "name": "GrimFamily D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Stephen_D_Default",
+        "name": "Stephen D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Charlotte_D_Default",
+        "name": "Charlotte D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Gwyneth_D_Default",
+        "name": "Gwyneth D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_SilenceMan_D_Default",
+        "name": "SilenceMan D Default",
+        "type": "skin",
+        "rarity": "1",
+        "amount": 1,
+        "duplicate_exchange": {
+          "enable": true,
+          "short_code": "coin",
+          "amount": 500,
+          "type": "currency"
+        }
+      },
+      {
+        "short_code": "Skin_Jean_D_Default",
+        "name": "Jean D Default",
         "type": "skin",
         "rarity": "1",
         "amount": 1,

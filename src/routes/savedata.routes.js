@@ -1,0 +1,14 @@
+const router = require('express').Router();
+const auth = require('@controllers/auth.controller');
+const savedata = require('@controllers/savedata.controller');
+router.use(auth.verifySession);
+router.get('/savedata/get', savedata.get);
+router.post('/savedata/get', savedata.get);
+router.post('/savedata/save', savedata.save);
+router.post('/room/create', savedata.createRoom);
+router.post('/room/join', savedata.joinRoom);
+router.post('/room/leave', savedata.leaveRoom);
+router.post('/room/find', savedata.findRoom);
+router.post('/room/status', savedata.roomStatus);
+router.post('/player/heartbeat', savedata.heartbeat);
+module.exports = router;

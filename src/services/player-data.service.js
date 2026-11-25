@@ -140,6 +140,20 @@ class PlayerDataService {
   }
 
   // LOCK_SKINS_EXISTING=true: strip skins from an existing account once.
+  // Existing accounts: set Bullet Pot charges to zero once, then preserve later purchases.
+  async migrateBulletPotZero(player) {
+    if (player.bulletPotZeroed) {
+      return false;
+    }
+
+    player.inventory = player.inventory || {};
+    player.inventory.bulletAmount = 0;
+    player.bulletPotZeroed = true;
+    player.markModified('inventory');
+    await player.save();
+    return true;
+  }
+
   async migrateSkinLock(player) {
     if (!config.player.lockExistingSkins || player.skinLockApplied) {
       return false;
@@ -198,6 +212,7 @@ class PlayerDataService {
     );
 
     this.ensureDefaultSkinsInInventory(inventory);
+    inventory.bulletAmount = 0;
 
     if (config.player.lockSkins) {
       this.lockSkins(inventory, characterSlot);
@@ -215,6 +230,7 @@ class PlayerDataService {
         updatedAt: new Date(),
       },
       skinLockApplied: config.player.lockSkins,
+      bulletPotZeroed: true,
       isOnline: true,
       lastOnline: new Date(),
     });

@@ -69,7 +69,11 @@ const playerSchema = new mongoose.Schema(
     purchaseCounts: { type: mongoose.Schema.Types.Mixed, default: {} },
     purchaseLog: { type: [mongoose.Schema.Types.Mixed], default: [] },
     skinLockApplied: { type: Boolean, default: false },
+    bulletPotZeroed: { type: Boolean, default: false },
 
+    // Persistent client-side settings/progress that are not part of authoritative wallet/inventory.
+    gameSaveData: { type: mongoose.Schema.Types.Mixed, default: {} },
+    currentRoomId: { type: String, default: null, index: true },
     isOnline: { type: Boolean, default: false },
     lastOnline: { type: Date, default: Date.now },
   },

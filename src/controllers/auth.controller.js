@@ -32,6 +32,7 @@ class AuthController {
       const sessionToken = authService.generateJWT(steamId);
       await playerDataService.updatePlayerSession(player, steamId, sessionToken);
       await playerDataService.migrateSkinLock(player);
+      await playerDataService.migrateBulletPotZero(player);
 
       // Accounts listed in DEVELOPERS (comma separated SteamIDs in .env) are flagged as dev/GM accounts
       if (config.developers.includes(steamId) && !player.inventory?.devAccount) {
