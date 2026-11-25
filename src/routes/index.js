@@ -19,6 +19,15 @@ const LOOT_BOX_FILE_MAP = {
   Bullet_Gacha: 'static/pots/bullet.json',
 };
 
+// DEBUG_REQUESTS=true: print every /live request and its response status (to find which endpoint the game calls when you press buy)
+if (process.env.DEBUG_REQUESTS === 'true') {
+  router.use(['/live', '/logapi'], (req, res, next) => {
+    const body = JSON.stringify(req.body || {}).slice(0, 400);
+    res.on('finish', () => console.log(`[REQ] ${req.method} ${req.originalUrl} -> ${res.statusCode} body=${body}`));
+    next();
+  });
+}
+
 router.use('/live/player', playerRoutes);
 router.use('/live/player', inventoryRoutes);
 router.use('/live', gameRoutes);
